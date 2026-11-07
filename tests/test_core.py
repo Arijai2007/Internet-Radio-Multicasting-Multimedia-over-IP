@@ -31,6 +31,13 @@ def test_sender_audio_and_packetization():
     assert "mpegts" in cmd
     assert "pkt_size=1316" in cmd[-1]
     assert "localaddr=127.0.0.1" in cmd[-1]
+    assert not any("sine=frequency" in argument for argument in cmd)
+    import wave
+    from pathlib import Path
+    track = next(Path(argument) for argument in cmd if argument.endswith(".wav"))
+    with wave.open(str(track), "rb") as music:
+        assert music.getnframes() / music.getframerate() > 10
+        assert any(music.readframes(music.getnframes()))
 
 
 def test_real_multicast_transport():

@@ -53,8 +53,10 @@ def broadcast_command(station, interface="", ttl=1):
         raise ValueError("TTL must be 1 to 255")
     cmd = [ffmpeg_path(), "-hide_banner", "-loglevel", "warning", "-nostdin"]
     if station.source == "demo":
+        from .music import demo_music
+        music = demo_music(station.id, ROOT / "media" / "demo-music")
         cmd += ["-re", "-f", "lavfi", "-i", "testsrc2=size=960x540:rate=25",
-                "-re", "-f", "lavfi", "-i", f"sine=frequency={440 if station.id == 1 else 660}:sample_rate=48000"]
+                "-re", "-stream_loop", "-1", "-i", str(music)]
     else:
         source = Path(station.source).expanduser()
         if not source.is_absolute():

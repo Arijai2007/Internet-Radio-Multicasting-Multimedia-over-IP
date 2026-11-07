@@ -6,7 +6,7 @@ The application is written in Python (`radio/`), with a native desktop UI, TCP s
 
 Install Python 3.10+ and [64-bit VLC desktop](https://www.videolan.org/vlc/) matching Python architecture. Then double-click `run.bat`. First launch downloads dependencies, including FFmpeg.
 
-Click **Start local broadcast**, select **Studio One**, then **Play selected station**. The test card includes a 440 Hz tone; Studio Two uses 660 Hz. Use volume, mute, pause/resume, stop and station switching. Closing the window stops the broadcasters started by this app.
+Click **Start local broadcast**, select **Studio One**, then **Play selected station**. Studio One plays an instrumental arrangement of **Ode to Joy**; Studio Two plays **Twinkle, Twinkle, Little Star**, both with a moving video test card. These original synthesized arrangements of public-domain melodies are generated offline and cached in `media/demo-music/`. No song downloads are needed. Use volume, mute, pause/resume, stop and station switching. Closing the window stops the broadcasters started by this app.
 
 Manual setup:
 
@@ -39,7 +39,7 @@ Added configurable channels, audio-only support, volume/mute, station library, b
 ## Troubleshooting
 
 - VLC missing: install native VLC matching Python architecture. The Python binding does not include libVLC.
-- No sound: unmute the app/system mixer, check the system output device, and try Studio One. Check your own source contains audio.
+- No sound: unmute the app/system mixer, check the system output device, and try Studio One's music. Check your own source contains audio.
 - Opening/buffering: check broadcaster, adapter address, firewall and multicast support.
 - Broadcast fails: inspect `station-1.log` / `station-2.log`, media paths and whether TCP 5432 is already in use.
 - First setup requires internet. Demo channels then work offline.
