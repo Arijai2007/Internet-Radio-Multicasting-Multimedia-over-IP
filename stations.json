@@ -1,0 +1,4 @@
+[
+  {"id": 1, "name": "Studio One", "description": "Live test card with audible 440 Hz tone", "group": "239.192.4.1", "port": 5433, "source": "demo"},
+  {"id": 2, "name": "Studio Two", "description": "Second test channel with 660 Hz tone", "group": "239.192.4.2", "port": 5434, "source": "demo"}
+]

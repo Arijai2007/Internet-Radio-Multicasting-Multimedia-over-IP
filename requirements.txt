@@ -1,0 +1,2 @@
+python-vlc>=3.0.21203,<4
+imageio-ffmpeg>=0.6,<0.7
