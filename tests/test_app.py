@@ -4,8 +4,8 @@ import tkinter as tk
 from radio.app import RadioApp
 
 
-def test_remote_refresh_preserves_local_broadcast_configuration():
-    root = tk.Tk()
+def test_remote_refresh_preserves_local_broadcast_configuration(tk_root):
+    root = tk.Toplevel(tk_root)
     root.withdraw()
     app = RadioApp(root, "127.0.0.1")
     try:

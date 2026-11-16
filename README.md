@@ -20,6 +20,8 @@ Linux: install Python, Tkinter and VLC (`sudo apt install python3-venv python3-t
 
 ## Media and network setup
 
+Click **Manage local channels** to add, edit or remove a channel. Choose **New channel**, enter its name and network details, and use **Choose file…** to select a song or video. Use `demo` as the source for generated music. **Save channel** validates the fields and saves them to `stations.json`; media files are never deleted. Keep at least one channel. Saving while broadcasting asks to stop the broadcast; press **Start local broadcast** afterwards to apply the changes. **Show local channels** restores your saved list after viewing a remote directory.
+
 Edit `stations.json`: replace `source: "demo"` with a video/audio path such as `media/my-video.mp4` or `media/radio.mp3`, update its name/description, and restart. Relative paths resolve against the project folder. Each channel needs a unique multicast group/port pair. Sources loop. Silent videos remain silent; missing source audio cannot be recovered.
 
 For multiple computers, start the broadcaster on the sender. On each receiver enter the sender's IP in **Directory host**, click **Refresh stations**, and play a channel. Use **Local IPv4** to select that machine's own adapter address before broadcasting/playback. For same-machine testing try `127.0.0.1`.
@@ -36,6 +38,12 @@ The Python sender uses FFmpeg real-time pacing, MPEG-TS, H.264 video, AAC audio,
 
 Added configurable channels, audio-only support, volume/mute, station library, broadcaster controls, background discovery, validated JSON metadata, per-station error logs, headless mode and integration checks.
 
+## Network dashboard
+
+When a channel plays, the dashboard shows incoming media bitrate (kb/s), received UDP packet count, time since the last packet, player opening/buffering duration or playback state, and a 30-second bitrate graph. Measurements reset when switching or stopping channels. They describe the selected channel on this receiver, not server upload speed or viewer count. The graph scales to recent traffic.
+
+**TS gaps** estimates missing MPEG-TS payload packets using per-stream continuity counters. It is not an exact count or percentage of lost UDP datagrams: counters wrap, and reordering, duplicated packets, sender restarts or local receive-buffer overflow can affect the estimate. Explicit stream discontinuities reset the baseline. The dashboard uses a separate passive multicast socket, so its reception can differ from the player's. If that socket cannot open, playback continues and the dashboard reports measurements unavailable. See [FFmpeg's MPEG-TS continuity handling](https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/mpegts.c) for protocol context.
+
 ## Troubleshooting
 
 - VLC missing: install native VLC matching Python architecture. The Python binding does not include libVLC.
@@ -50,6 +58,7 @@ Added configurable channels, audio-only support, volume/mute, station library, b
 python -m pip install pytest
 python -m pytest -q
 python -m tests.playback_check
+python -m tests.dashboard_check
 ```
 
 Tests cover invalid addressing, TCP discovery/restart, stream configuration and real multicast reception. Playback check requires VLC and verifies decoded video frames and audio blocks using dummy audio output; it cannot prove physical speakers are audible. Check audible sound and real LAN delivery on presentation machines.

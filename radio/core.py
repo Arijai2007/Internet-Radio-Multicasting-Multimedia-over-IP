@@ -55,6 +55,24 @@ def load_stations(path=ROOT / "stations.json"):
     return parse_stations(json.loads(Path(path).read_text(encoding="utf-8-sig")))
 
 
+def save_stations(stations, path=ROOT / "stations.json"):
+    """Validate first, then replace atomically so failed saves preserve the file."""
+    import tempfile
+    stations = parse_stations([asdict(station) for station in stations])
+    path = Path(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         suffix=".tmp", delete=False) as output:
+            temporary = Path(output.name)
+            json.dump([asdict(station) for station in stations], output, indent=2, ensure_ascii=False)
+            output.write("\n")
+        os.replace(temporary, path)
+    finally:
+        if temporary:
+            temporary.unlink(missing_ok=True)
+
+
 def ffmpeg_path():
     import imageio_ffmpeg
     return imageio_ffmpeg.get_ffmpeg_exe()
