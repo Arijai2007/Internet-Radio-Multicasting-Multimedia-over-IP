@@ -2,37 +2,97 @@
 
 The application is written in Python (`radio/`), with a native desktop UI, TCP station discovery, and UDP multicast video/audio. It replaces the previous C implementation, which remains available in Git history.
 
+Airwave is a **Computer Networks project** demonstrating one broadcaster sending live media to multiple receivers on a multicast-capable local network. Python manages discovery, channels and network monitoring; FFmpeg encodes and transmits the media, and libVLC plays it inside the window.
+
+## Features
+
+- Desktop player with channel switching, pause/resume, volume and mute.
+- TCP station directory and UDP multicast audio/video delivery.
+- Channel editor for adding, editing and removing channels and choosing media files.
+- Network dashboard with received bitrate, packet count, buffering state and a traffic graph.
+- Offline instrumental demo channels and support for your own songs and videos.
+- Validated configuration, safe saving and cleanup of this app's sender processes.
+
 ## Complete project report
 
 Read the [project report](docs/Airwave_Project_Guide.md) or download the [Word document](docs/Airwave_Project_Guide.docx) for Windows setup, every button and field, a step-by-step channel creation example, architecture, networking explanations, dashboard measurements, demonstration steps, troubleshooting and 40 viva questions with answers.
 
 ## Run on Windows
 
-Install Python 3.10+ and [64-bit VLC desktop](https://www.videolan.org/vlc/) matching Python architecture. Then double-click `run.bat`. First launch downloads dependencies, including FFmpeg.
+1. Install Python 3.10+ with Tkinter and [VLC desktop](https://www.videolan.org/vlc/), normally 64-bit for both.
+2. Download and extract this repository into a writable folder.
+3. Double-click **run.bat**. First launch creates the Python environment and downloads dependencies, including FFmpeg.
+4. Enter **127.0.0.1** in **Local IPv4** for a same-computer test.
+5. Click **Start local broadcast**, select **Studio One**, then click **Play selected station**.
 
 Click **Start local broadcast**, select **Studio One**, then **Play selected station**. Studio One plays an instrumental arrangement of **Ode to Joy**; Studio Two plays **Twinkle, Twinkle, Little Star**, both with a moving video test card. These original synthesized arrangements of public-domain melodies are generated offline and cached in `media/demo-music/`. No song downloads are needed. Use volume, mute, pause/resume, stop and station switching. Closing the window stops the broadcasters started by this app.
 
-Manual setup:
+The main workflow uses the Windows GUI. Internet is needed for initial setup; the generated demo channels then work offline. Installing the Python binding alone does not install native VLC.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python -m radio
-```
+## What each control does
 
-Linux: install Python, Tkinter and VLC (`sudo apt install python3-venv python3-tk vlc` on Ubuntu), then use `.venv/bin/python` for the commands. Embedded playback supports Windows and Linux. macOS embedded playback is not implemented; use the headless sender and VLC as receiver.
+| Control | Purpose |
+|---|---|
+| Directory host | Address of the sender providing the station list. Use `127.0.0.1` for this computer. |
+| Local IPv4 | This computer's own network adapter address. Set it before starting playback or broadcasting. |
+| Refresh stations | Fetches the directory host's channel list over TCP. It does not start playback or overwrite local channels. |
+| Station library | Single-click to select a channel; double-click to play it. |
+| Play selected station | Joins and plays the selected channel, replacing previous playback. |
+| Manage local channels | Opens the editor for this computer's saved channels. |
+| Show local channels | Restores the saved local channel list after viewing a remote directory. |
+| Start local broadcast | Starts the directory and **all** saved local channels. Does not automatically play a channel. |
+| Stop local broadcast | Stops this app's senders and directory. Other viewers stop receiving new media. |
+| Pause / Resume | Pauses or resumes this player's playback; the sender and other viewers continue. |
+| Stop | Stops only local playback and clears its dashboard. Broadcasting continues until separately stopped. |
+| Mute and Volume | Adjust this player's audio without affecting other receivers. |
+| Main window X | Closes the app and cleans up its player, monitoring socket and local broadcasts. |
 
-## Media and network setup
+To finish a local demonstration, click **Stop** and **Stop local broadcast**, or close the main window.
 
-Click **Manage local channels** to add, edit or remove a channel. Choose **New channel**, enter its name and network details, and use **Choose file…** to select a song or video. Use `demo` as the source for generated music. **Save channel** validates the fields and saves them to `stations.json`; media files are never deleted. Keep at least one channel. Saving while broadcasting asks to stop the broadcast; press **Start local broadcast** afterwards to apply the changes. **Show local channels** restores your saved list after viewing a remote directory.
+## Add your own channel
 
-Edit `stations.json`: replace `source: "demo"` with a video/audio path such as `media/my-video.mp4` or `media/radio.mp3`, update its name/description, and restart. Relative paths resolve against the project folder. Each channel needs a unique multicast group/port pair. Sources loop. Silent videos remain silent; missing source audio cannot be recovered.
+1. Store a song or video on the **sender computer** in a stable location.
+2. Click **Manage local channels**, then **New channel**.
+3. For a third channel in the default setup, enter:
+   - **Channel ID:** `3`
+   - **Name:** `Music TV`
+   - **Description:** a short description of your content
+   - **Multicast IPv4:** `239.192.4.3`
+   - **UDP port:** `5435`
+4. Click **Choose file…** and select your media. Use the exact source value `demo` for generated content instead.
+5. Click **Save channel**. If broadcasting is active, confirm that it may stop. Saving also stops local playback.
+6. Close the editor, click **Start local broadcast**, select the new channel and press **Play selected station**.
+7. On remote receivers, click **Refresh stations** to retrieve the updated list.
 
-For multiple computers, start the broadcaster on the sender. On each receiver enter the sender's IP in **Directory host**, click **Refresh stations**, and play a channel. Use **Local IPv4** to select that machine's own adapter address before broadcasting/playback. For same-machine testing try `127.0.0.1`.
+Selecting a saved editor row loads its fields for editing. **Save channel** stores changes; **Remove channel** removes the selected record after confirmation while keeping its media file. At least one channel must remain. **Close** exits the editor without saving unsaved field edits.
 
-Headless sender: `python -m radio --broadcast --interface 192.168.1.10` (use the actual sender adapter address).
+Channels are saved in `stations.json`. IDs must be unique positive integers, ports must be from 1024 to 65535, and every multicast group/port pair must be unique. Relative file paths resolve against the project folder. Source files loop continuously; playlists are not implemented. Audio-only files play without video, and silent videos remain silent.
+
+Media files are not automatically uploaded to GitHub or copied to receivers. Receivers need the stream, not a local copy of the source file.
+
+## Run across multiple computers
+
+1. Connect the computers to the same multicast-capable LAN.
+2. On the **sender**, set **Local IPv4** to its LAN address and click **Start local broadcast**.
+3. On each **receiver**, set **Directory host** to the sender's address and **Local IPv4** to that receiver's own address.
+4. Click **Refresh stations**, select a channel and press **Play selected station**. Receivers do not need to start local broadcasts.
+
+For example, the sender might be `192.168.1.10` and two receivers `192.168.1.11` and `192.168.1.12`. Use the actual assigned addresses. `127.0.0.1` always refers to the same computer and cannot identify a remote sender.
 
 Allow TCP 5432 and station UDP ports (5433/5434 by default) through the private-network firewall. Use a multicast-capable LAN. Wi-Fi isolation can block delivery; ordinary internet connections generally do not route multicast. TCP is for discovery; media comes from multicast groups. Configured local stations can play without discovery.
+
+## How the networking works
+
+```text
+stations.json -> Python directory -- TCP 5432 --> receiver channel list
+Media file   -> FFmpeg -- MPEG-TS over UDP multicast --> libVLC player
+                                  |
+                                  +--> passive monitor --> dashboard
+```
+
+Each channel has its own multicast destination and FFmpeg process. The default multicast TTL is 1, intended for the local segment. Default destinations are `239.192.4.1:5433` and `239.192.4.2:5434`.
+
+There is no configured viewer limit or measured maximum capacity. Multicast avoids a separate media stream at the sender for each viewer, but practical delivery depends on the LAN. More channels increase encoder CPU and outgoing bandwidth. Listener counts, authentication and encrypted media are not implemented.
 
 ## Fixes and additions
 
@@ -67,6 +127,19 @@ python -m tests.dashboard_check
 
 Tests cover invalid addressing, TCP discovery/restart, stream configuration and real multicast reception. Playback check requires VLC and verifies decoded video frames and audio blocks using dummy audio output; it cannot prove physical speakers are audible. Check audible sound and real LAN delivery on presentation machines.
 
-Code: `radio/app.py` (UI), `radio/core.py` (broadcast/discovery), `radio/player.py` (VLC loading), `radio/__main__.py` (entry point).
+## Project structure
+
+| File | Responsibility |
+|---|---|
+| `radio/app.py` | Desktop controls, playback and dashboard integration |
+| `radio/core.py` | Channel validation/saving, TCP discovery and FFmpeg broadcasting |
+| `radio/editor.py` | Channel editor and media selection |
+| `radio/metrics.py` | Multicast traffic monitoring and continuity-gap estimation |
+| `radio/player.py` | Native VLC loading |
+| `radio/music.py` | Offline instrumental demo generation |
+| `radio/__main__.py` | Application entry point |
+| `stations.json` | Local channel configuration |
+| `tests/` | Automated tests and live playback/dashboard checks |
+| `docs/` | Complete project report and viva preparation |
 
 References: [FFmpeg UDP](https://ffmpeg.org/ffmpeg-protocols.html#udp), [VideoLAN libVLC](https://videolan.videolan.me/vlc/master/libvlc.html).
