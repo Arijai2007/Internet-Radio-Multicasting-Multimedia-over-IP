@@ -1,30 +1,43 @@
-# Airwave Computer Networks Project Guide
-## Setup operation technical explanation and viva preparation
-Airwave demonstrates how one broadcaster can deliver live audio and video to multiple receivers using IP multicast. A Python desktop application manages channels, discovers stations over TCP, controls broadcasting and playback, and displays network measurements.
-This guide explains how to run and demonstrate the actual project, how its components work, and how to answer common viva questions. The intended demonstration is one sender and two or more receivers on a multicast-capable local network. A single-computer test is also supported.
-The application uses Python sockets for station discovery and monitoring. FFmpeg encodes and transmits media; libVLC decodes it inside the interface. These library responsibilities should be stated clearly during assessment.
-## Project details
-Project name: Internet Radio Multicasting Multimedia over IP
-Application name: Airwave
+# Airwave Computer Networks Project Report
+## Internet Radio Multicasting Multimedia over IP
+Airwave is a Python desktop application that demonstrates audio and video delivery over a local IP network. A broadcaster sends each channel to a multicast group, and receivers select the channel they want to play. The system combines reliable station discovery with live media distribution.
+## Abstract
+Sending a separate copy of the same media stream to each viewer increases the sender's traffic as the audience grows. This project uses UDP multicast to send one stream per channel and TCP to provide the channel directory. A Windows desktop interface supports broadcasting, playback, local channel editing and network observation.
+Python implements the application and networking controls. FFmpeg encodes media and transmits MPEG-TS; libVLC decodes and plays it. The dashboard reports received bitrate, packet count, buffering state and estimated stream continuity gaps. Local automated and live checks verify operation, while larger LAN capacity remains an evaluation task.
+## Purpose of this report
+This report explains the problem, objectives, design, implementation, operation and verification of the project. A new reader can follow the Windows setup, understand each control, add a media channel, run a LAN demonstration and prepare for the viva. Actual functions are distinguished from future enhancements.
+## Project information
+Academic subject: Computer Networks
+Application: Airwave
+Implementation language: Python
+Primary demonstration environment: Windows on a multicast-capable LAN
 Repository owner: Arijai2007
-Document date: 16 November 2026
+Report date: 16 November 2026
 Implementation reviewed: a755a6b
 Repository: https://github.com/Arijai2007/Internet-Radio-Multicasting-Multimedia-over-IP
-## Guide map
-1  Project overview and meaning
-2  Included features and software requirements
-3  Architecture and end to end operation
-4  Networking concepts and default configuration
-5  Windows installation and first run
-6  Linux setup and command line operation
-7  Demonstration across multiple computers
-8  Channel editing and media selection
-9  Network dashboard and interpreting measurements
-10  Source code and implementation walkthrough
-11  Verification and presentation procedure
-12  Troubleshooting and common errors
-13  Limitations improvements and references
-14 to 17  Forty expected viva questions with answers
+
+# Contents
+1 Project overview and meaning
+2 Included features and requirements
+3 Architecture and end to end operation
+4 Networking concepts and configuration
+5 Windows installation and first run
+6 Main window connection and channel controls
+7 Playback broadcast and window controls
+8 Demonstration across multiple computers
+9 Adding a new media channel step by step
+10 Channel editor buttons fields and saved changes
+11 Network dashboard and measurements
+12 Source code and implementation walkthrough
+13 Verification and presentation procedure
+14 Troubleshooting and common errors
+15 Limitations improvements and references
+16 Viva questions on the project basics
+17 Viva questions on networking
+18 Viva questions on media and implementation
+19 Viva questions on measurements and evaluation
+
+Read the report in order for a full explanation. For a first practical session, use Windows installation and first run, the two main-window control chapters, and Adding a new media channel step by step. The final four chapters contain 40 viva questions with answers.
 
 # 1 Project overview and meaning
 ## Problem being addressed
@@ -53,7 +66,6 @@ We implement the Python application logic, station configuration, TCP discovery,
 - Add, rename, edit and remove local channels through the channel editor.
 - Choose an audio or video file without editing configuration manually.
 - Network dashboard with bitrate, UDP packet count, stream-counter gaps, buffering state and a traffic graph.
-- Headless broadcasting mode for a sender that does not need the GUI.
 - Input validation, atomic configuration saving and per-station error logs.
 ## Default channels
 | Channel | Media | Group | UDP port |
@@ -69,7 +81,7 @@ The demo tracks are original synthesized arrangements of public-domain melodies,
 | pytest | Runs automated checks during development |
 Use a 64-bit Python and 64-bit VLC installation on the usual Windows setup. Installing python-vlc alone does not install VLC. Dependencies are listed in requirements.txt. The project does not require a C compiler or WSL.
 ## Supported environments
-Windows and Linux have embedded playback paths; local verification was on Windows. macOS embedded playback is not implemented; use standalone VLC as a receiver. Internet is needed for initial downloads, but the demo channels then work offline.
+This report follows the Windows desktop workflow used for local verification. Install the dependencies before the demonstration; the generated demo channels then work offline.
 
 # 3 Architecture and end to end operation
 ## Logical architecture
@@ -142,46 +154,45 @@ Do not run the application directly inside a ZIP preview. First launch may take 
 7. Select Studio Two and click Play selected station to change the stream.
 8. Observe the dashboard, then use Stop and Stop local broadcast to finish.
 The loopback address means this same computer. Other computers cannot use the sender's loopback address to reach it. Windows loopback multicast routing is handled by keeping the broadcaster's group membership alive before viewers join.
-## Manual setup if the launcher fails
-Open a terminal in the project folder and run:
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python -m radio
-```
-The virtual environment keeps project dependencies separate from other Python projects. To reopen an existing installation, run run.bat again. It checks dependencies on each launch, so a fresh or incomplete setup may still need internet access.
+## What to expect during startup
+The launcher creates a private Python environment and installs the listed dependencies before opening Airwave. On later runs it checks those dependencies again. You do not need to enter networking commands for normal operation. If installation fails, read the message in the launcher window and check Python, internet connectivity and folder permissions.
+Stop and Stop local broadcast perform different actions. The first stops your player; the second stops media transmission and the directory on this computer. Close the main window to clean up both.
 
-# 6 Linux setup and command line operation
-## Linux installation example
-On Ubuntu or Debian, install the native prerequisites, then create the project environment:
-```sh
-sudo apt update
-sudo apt install python3-venv python3-tk vlc
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m radio
-```
-Run these commands from an extracted or cloned project folder. Other Linux distributions use different package-manager commands. Embedded video uses the X11 window handle path; a desktop session with suitable X11 or XWayland support is needed. Linux behavior should be checked on the demonstration machine before assessment.
-## Headless broadcasting
-Headless means the broadcaster runs without the desktop interface. On Windows:
-```powershell
-.\.venv\Scripts\python -m radio --broadcast --interface 192.168.1.10
-```
-On Linux:
-```sh
-.venv/bin/python -m radio --broadcast --interface 192.168.1.10
-```
-Replace the example address with the sender's own LAN adapter IPv4 address. The sender loads stations.json, starts the directory and all configured channels, and runs until interrupted. Press Ctrl+C to stop it. Do not also start the GUI broadcaster on the same computer using the same TCP port.
-## Selecting an interface for the GUI
-```powershell
-.\.venv\Scripts\python -m radio --interface 127.0.0.1
-```
-Without --broadcast, the application opens its GUI and pre-fills the interface field. The interface can also be set directly in the window before starting playback or broadcasting. Leaving it blank lets the networking stack choose a route, which can be confusing on computers with Wi-Fi, Ethernet, virtual adapters or VPNs.
-## Receiving with standalone VLC
-For an alternative receiver, use VLC Open Network Stream with udp://@239.192.4.1:5433 for Studio One or udp://@239.192.4.2:5434 for Studio Two. The network must deliver the multicast group to that machine. Standalone VLC does not provide Airwave's channel editor or its dashboard.
-The ordinary workflow remains the desktop app. Terminal mode is an additional deployment option for the sender, not a requirement for each viewer.
+# 6 Main window connection and channel controls
+## Understand the two roles first
+A broadcaster sends media; a receiver plays it. Airwave can perform both roles on one computer, which is useful for a local test. In a multi-computer demonstration, normally only the sender starts broadcasting. Receiver computers refresh the sender's directory and play its channels.
+## Directory host field
+Enter the IP address or hostname of the computer providing the channel directory. For a same-computer test use 127.0.0.1. On a remote receiver, use the sender's LAN address, for example 192.168.1.10. This field is used by Refresh stations; changing it alone does not start a connection or change playback.
+## Local IPv4 field
+Enter this computer's own adapter IPv4 address before starting broadcasting or playback. Use 127.0.0.1 for the local test. On a LAN receiver use its own address, not the sender's address. A blank value lets the operating system choose a route. Apply a changed value by stopping and restarting the relevant broadcast or playback.
+## Refresh stations button
+Connects to Directory host through TCP port 5432, validates the channel information and replaces the visible station list with the received records. It does not start playback or broadcasting and does not overwrite your saved local channels. The button is temporarily disabled while the request is running. If it fails, read the status message and check the sender and address.
+## Station library and Play selected station button
+Single-click a channel to select it; selection alone does not tune the player. Click Play selected station, or double-click the channel, to stop any previous playback and join the selected stream. A short opening or buffering delay is normal. The sender must already be transmitting that group and port. The selected name and description identify what is playing.
+## Show local channels button
+Restores the main list from the channels saved on this computer. Use it after viewing a remote directory or after editing local channels. It changes the visible list without automatically stopping current playback or starting a broadcast.
+## Manage local channels button
+Opens the editor for this computer's saved channels. It always edits local records, even if the main station list currently came from another sender. Opening the editor does not itself stop or alter a broadcast. Saving a change stops local playback and broadcasting, with confirmation if the broadcast is active.
 
-# 7 Demonstration across multiple computers
+# 7 Playback broadcast and window controls
+## Start local broadcast button
+Starts the TCP directory and an FFmpeg sender for every saved local channel. It does not merely start the highlighted channel and does not automatically play anything. After clicking it, select a channel and press Play selected station if this computer should also receive.
+Only the intended sender needs this button during a LAN demonstration. Clicking it while this app's directory is already running does not start another copy. If another program occupies TCP 5432, or a media source cannot be opened, an error is shown or reported in the status area and station log.
+## Stop local broadcast button
+Stops this app's media senders and its TCP directory. Other receivers will no longer receive new live packets and cannot refresh from this directory. They may continue playing briefly from their buffers. This button does not directly close the local player; click Stop as well when ending a demonstration.
+## Pause and Resume button
+The first click asks VLC to pause the current player. The next click asks it to resume. It does not pause the sender or other viewers. Network traffic can continue while playback is paused, so the dashboard can still show incoming packets. This is live playback, not a guaranteed recording or seekable pause buffer.
+## Stop button
+Stops only this computer's player, leaves its current multicast reception, and clears the session dashboard and graph. It does not stop any local broadcaster. To watch again, select a channel and click Play selected station. Use Stop local broadcast separately if this computer is also the sender.
+## Mute checkbox and Volume slider
+Mute turns this player's sound off without stopping video or reception. Uncheck it to hear sound again. The slider changes the local player volume from 0 to 100; it cannot change other receivers or the source recording. The system mixer, output device and source audio track also determine what you hear.
+## Window close and status display
+The main window X closes Airwave and cleans up its own player, monitor, local senders and directory. Minimize hides the window without stopping the session. Maximize changes the available viewing area. The editor's Close button only closes the editor.
+The status line shows opening, playback or failure information. The content description identifies the channel, group and port. Dashboard values are observations, not buttons. Check the sender and network when opening or buffering persists.
+## Useful control sequences
+To watch locally: Start local broadcast, select a channel, then Play selected station. To switch: select another channel and press Play. To finish completely: Stop, then Stop local broadcast, or close the main window.
+
+# 8 Demonstration across multiple computers
 ## Suggested arrangement
 | Role | Example IPv4 | Action |
 | Sender | 192.168.1.10 | Starts local broadcast and station directory |
@@ -206,34 +217,47 @@ Stop the sender broadcast. The receivers should eventually stop receiving new pa
 ## Network conditions
 A successful TCP refresh does not prove multicast works. Firewalls and Wi-Fi isolation may block media while allowing discovery. TTL 1 restricts the stream to its local segment. Test the LAN before the viva; avoid relying on guest Wi-Fi or mobile hotspots.
 
-# 8 Channel editing and media selection
-## Add a channel through the interface
-1. Click Manage local channels and then New channel.
-2. Enter a positive, unique Channel ID and a clear Name.
-3. Add a Description that identifies the content.
-4. Enter an IPv4 multicast group and a UDP port between 1024 and 65535. Each saved group and port pair must be unique.
-5. Click Choose file to select an existing song or video. Leave source as demo to use generated test content.
-6. Click Save channel. If a local broadcast is active, the app asks before stopping it for the configuration change.
-7. Close the editor, start local broadcast again, select the new channel and play it.
-Use a separate UDP port for each channel during the demonstration. For example, a third channel can use 239.192.4.3 and port 5435. The editor proposes values, but you should review them for conflicts on the LAN.
-## Editing and removing
-Select a saved channel in the editor to load its fields. Change the name, media path or network details and save. Remove channel deletes the configuration entry after confirmation; it does not delete the song or video file. At least one local channel must remain.
-Changes are written to stations.json using validation and an atomic replacement. This avoids leaving a partially written configuration if saving fails. The editor always manages the local broadcaster configuration, even when the main window is showing a remote directory list.
-## Configuration example
-```json
-{
-  "id": 3,
-  "name": "Music TV",
-  "description": "Our selected music video",
-  "group": "239.192.4.3",
-  "port": 5435,
-  "source": "media/music.mp4"
-}
-```
-stations.json contains a JSON list of these objects, separated by commas. Relative paths resolve against the project folder. File paths selected with the browser can be absolute. A file path valid on one sender may need updating after copying the project to another computer.
-Audio-only files play as radio without video. A video with no audio remains silent. Files loop continuously; selecting several songs as an automatic playlist is not implemented. Only use media you are entitled to demonstrate or distribute, and remember that ignored media files are not automatically included in GitHub downloads.
+# 9 Adding a new media channel step by step
+## Prepare the media on the sender
+Choose a song or video stored on the computer that will broadcast it. An audio file makes a radio channel; a video file makes a television channel if it contains video. A source without audio remains silent. Put the file in a stable location, since moving it later breaks the saved path.
+For this example, create a channel named Music TV with ID 3, group 239.192.4.3 and UDP port 5435. Use any audio or video file you are entitled to demonstrate. These network values fit the default two-channel setup; review the editor's suggested values before saving.
+## Create and save the channel
+1. Open Airwave on the sender and click Manage local channels.
+2. Click New channel. This prepares a blank new record with suggested values; it does not yet save anything.
+3. Enter 3 in Channel ID and Music TV in Name. Add a description such as Our selected music video.
+4. Enter 239.192.4.3 in Multicast IPv4 and 5435 in UDP port. Do not enter the sender's ordinary LAN address in the multicast field.
+5. Click Choose file, select the song or video, and confirm the file chooser. The Media file field now contains its path. Choosing the file alone does not save the channel.
+6. Click Save channel. If local broadcasting is active, confirm that it may stop. Saving also stops local playback. Invalid values produce an error; correct them and save again.
+7. Confirm that Music TV appears in the editor list. Click Close to return to the main window. Saved channels persist after the app restarts.
+## Start and verify the new stream
+1. Click Show local channels if needed, then Start local broadcast. This restarts all saved local channels, including Music TV.
+2. Select Music TV and click Play selected station. Expect your chosen media, not the original demo track. Audio-only playback may leave the video area black.
+3. Check that UDP packet count increases and bitrate is above zero. For sound, uncheck Mute and raise both application and system volume.
+4. On other computers, click Refresh stations using the sender's Directory host, then select Music TV and play it. The receivers do not need the media file itself.
+If the channel appears but will not play, check the sender's media path, broadcast status, local adapter, firewall and group-port agreement. Adding a channel does not upload its media to GitHub or copy it to another broadcaster.
 
-# 9 Network dashboard and measurements
+# 10 Channel editor buttons fields and saved changes
+## Editor buttons
+| Button | Action and expected result |
+| New channel | Prepares suggested values for a new record. Nothing is saved yet. |
+| Choose file | Selects a media path. Cancelling keeps the previous value. |
+| Save channel | Validates and saves the record, then stops local playback and broadcasting. |
+| Remove channel | Removes a selected record after confirmation, keeping its media file. One channel must remain. |
+| Close | Closes only the editor. Unsaved field edits are not saved. |
+Select a channel row in the editor to load its fields before editing or removing it. To rename a channel or choose another song, change the selected record and click Save channel. Editing fields without saving leaves the stored configuration unchanged.
+## Meaning of every field
+| Field | What to enter |
+| Channel ID | A positive whole number unique within the saved list. It identifies the record, not a network port. |
+| Name | A nonempty display name shown in the station library. |
+| Description | Optional text explaining the channel content. |
+| Multicast IPv4 | An IPv4 multicast destination group, such as 239.192.4.3. |
+| UDP port | A whole number from 1024 to 65535. Keep each group and port pair unique; separate ports are simplest for a demonstration. |
+| Media file | An existing local audio or video file path, or the exact word demo for generated content. |
+## Where changes are stored
+The application validates records before atomically replacing stations.json in the project folder. Relative media paths resolve from that folder; file-chooser paths can be absolute. Source files loop continuously. Selecting a different file replaces that channel's source; it does not create a playlist.
+Declining the save confirmation keeps the existing broadcast and configuration. After saving, restart broadcasting; remote receivers must refresh. A familiar file extension does not guarantee the media is decodable.
+
+# 11 Network dashboard and measurements
 ## Reading the dashboard
 | Reading | Interpretation |
 | Received kb/s | Incoming UDP payload bytes converted to kilobits per second over the latest sample interval |
@@ -252,7 +276,7 @@ TS gaps are not lost UDP datagrams, an exact packet-loss percentage or a count o
 ## Measurement boundaries
 The dashboard uses a passive multicast socket separate from libVLC. Its receive behavior can differ from the player's. Zero observed gaps does not prove perfect delivery. If the monitoring socket cannot open, playback can continue while the dashboard reports measurements unavailable. The dashboard does not measure viewer count, sender CPU usage, round-trip delay or end-to-end latency.
 
-# 10 Source code and implementation walkthrough
+# 12 Source code and implementation walkthrough
 ## File responsibilities
 | File | Main responsibility |
 | radio/app.py | Tkinter window, playback controls, editor integration and dashboard updates |
@@ -274,7 +298,7 @@ Tkinter handles the interface on its main thread. Directory fetching runs in a w
 FFmpeg performs the intensive media encoding in separate processes. libVLC handles playback and decoding. One FFmpeg process is created for each channel, so increasing channels increases sender CPU and network demand.
 The old C implementation is retained in Git history. It is not the active application and its protocol is not compatible with the Python version.
 
-# 11 Verification and presentation procedure
+# 13 Verification and presentation procedure
 ## Checks supplied with the project
 Run the automated checks from the project folder after activating the environment, or use its Python executable explicitly:
 ```powershell
@@ -283,7 +307,7 @@ Run the automated checks from the project folder after activating the environmen
 .\.venv\Scripts\python -m tests.playback_check
 .\.venv\Scripts\python -m tests.dashboard_check
 ```
-At guide preparation, the current suite passed 25 tests on the local Windows environment. The tests cover invalid fields, duplicate records, Windows text encoding, safe saves, discovery, multicast reception, editor operations, local and remote configuration separation, continuity estimation and monitor cleanup.
+At report preparation, the current suite passed 25 tests on the local Windows environment. The tests cover invalid fields, duplicate records, Windows text encoding, safe saves, discovery, multicast reception, editor operations, local and remote configuration separation, continuity estimation and monitor cleanup.
 The live playback check verified decoded audio and video. The dashboard check verified live traffic measurements and graph updates alongside decoding. Its dummy audio output deliberately does not test whether physical speakers are audible. These results are local verification, not a large-scale LAN capacity benchmark.
 ## Suggested five minute presentation
 1. Explain the problem and show the architecture. Identify TCP discovery and UDP multicast as separate paths.
@@ -297,9 +321,9 @@ Record the real machine addresses, network type, number of active channels, numb
 ## Short introduction for speaking
 Our project is Airwave, a Python application for multicast television and radio over a local IP network. We use TCP to share the channel directory and UDP multicast to transmit media to interested receivers. FFmpeg prepares the live stream and VLC plays it. We added a channel editor and a dashboard to observe incoming traffic and estimate stream continuity gaps.
 
-# 12 Troubleshooting and common errors
+# 14 Troubleshooting and common errors
 ## The app does not open
-Run run.bat from an extracted project folder. If it closes early, use the manual commands in section 5 so you can read the error. Check Python, Tkinter, dependency installation and folder write permission. A missing or invalid stations.json produces a configuration error; restore a valid nonempty channel list.
+Run run.bat from an extracted project folder. If it closes early, read the error in the launcher window. Check Python, Tkinter, dependency installation and folder write permission. A missing or invalid stations.json produces a configuration error; restore a valid nonempty channel list.
 ## VLC cannot be loaded
 Install native desktop VLC matching Python architecture and restart the app. python-vlc is only a binding. The application also recognizes its optional project-local portable VLC directory when present, but that directory is not part of the GitHub source download.
 ## The picture plays without sound
@@ -315,12 +339,14 @@ With zero bitrate, check last packet age and whether the sender is active. If pl
 ## Safe shutdown
 Stop playback and local broadcast, or close the main window. The application cleans up its own player, sockets and sender processes. Avoid broad commands that terminate every VLC or FFmpeg process on the machine.
 
-# 13 Limitations improvements and references
+# 15 Limitations improvements and references
 ## Current limits to state honestly
 The project has no authentication, encryption or access-control layer. Treat it as a trusted lab LAN application. Multicast traffic is not confidential. Do not expose the directory or media services as a public production service.
 Viewer count is not known because receivers do not register media sessions with the sender. Channel count has no small hard-coded cap, but it is limited by CPU, bandwidth, ports and directory response size. Each channel has its own encoder. Maximum concurrent viewers and channels have not been benchmarked.
 The current system loops one source per channel. Playlists, scheduled programmes, recording, guaranteed reconnect and retransmission or forward-error correction are not implemented. Pausing is live-player buffering behavior, not a DVR promise. macOS embedded playback and broad cross-platform deployment need further work.
 The application assumes a suitable multicast network, with TTL 1 by default. Wider routing requires network support and configuration. Increasing TTL alone does not make public internet multicast available.
+## Project conclusion
+Airwave demonstrates multicast media distribution through a working desktop application. TCP discovery tells receivers where channels are available; UDP multicast carries their media. Channel editing makes the sources configurable, and the dashboard connects user-visible playback with measurable network traffic. Local checks verify the implementation, while multi-computer capacity and broader deployment require further testing.
 ## Practical future improvements
 - Playlists and a now-playing display so each channel can schedule multiple tracks.
 - Automatic reconnect with clear timeout and retry status after interruptions.
@@ -334,9 +360,9 @@ The application assumes a suitable multicast network, with TTL 1 by default. Wid
 [3] FFmpeg protocols documentation, UDP options and examples. https://ffmpeg.org/ffmpeg-protocols.html#udp
 [4] Python socket documentation. https://docs.python.org/3/library/socket.html
 [5] VideoLAN libVLC documentation. https://videolan.videolan.me/vlc/master/libvlc.html
-[6] Project source and README at the Arijai2007 repository. The implementation details and reported checks in this guide refer to version a755a6b, rather than the older C report.
+[6] Project source and README at the Arijai2007 repository. The implementation details and reported checks in this report refer to version a755a6b, rather than the older C report.
 
-# 14 Viva questions on the project basics
+# 16 Viva questions on the project basics
 ## 1 What is the aim of your project
 To demonstrate live audio and video delivery from one broadcaster to multiple receivers using IP multicast, with TCP station discovery, a desktop player and network measurements.
 ## 2 Why is this a Computer Networks project
@@ -358,7 +384,7 @@ After dependencies are installed, the default generated channels can run offline
 ## 10 What is a channel in this project
 A saved record containing an ID, name, description, multicast group, UDP port and media source. The group and port identify the live stream that receivers tune to.
 
-# 15 Viva questions on networking
+# 17 Viva questions on networking
 ## 11 Why use TCP for station discovery
 The directory response should arrive completely and in order. TCP provides an ordered reliable byte stream, and the app adds newline framing and validation for the metadata message.
 ## 12 Why use UDP for the media
@@ -380,7 +406,7 @@ No. It avoids separate identical media copies at the sender for every viewer, bu
 ## 20 Does this project use RTP
 No. It sends MPEG-TS directly over UDP multicast. RTP could be introduced in a future design, but should not be claimed as part of this implementation.
 
-# 16 Viva questions on media and implementation
+# 18 Viva questions on media and implementation
 ## 21 What is FFmpeg doing
 It reads media at playback speed, encodes H.264 video and AAC audio as applicable, multiplexes MPEG-TS and sends it to the channel's UDP multicast destination.
 ## 22 What is VLC doing
@@ -402,7 +428,7 @@ The app keeps the local broadcaster configuration separate from the station list
 ## 30 How does the sender stop safely
 It retains handles to its own FFmpeg processes, requests termination and escalates to killing those processes only if necessary. It closes associated membership sockets and the directory service.
 
-# 17 Viva questions on measurements and evaluation
+# 19 Viva questions on measurements and evaluation
 ## 31 How do you calculate received bitrate
 Measure the change in received UDP payload bytes over elapsed time, multiply by eight, and divide by 1000 to report kb/s. The reading excludes network and link headers.
 ## 32 How do you estimate packet loss

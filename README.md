@@ -2,9 +2,9 @@
 
 The application is written in Python (`radio/`), with a native desktop UI, TCP station discovery, and UDP multicast video/audio. It replaces the previous C implementation, which remains available in Git history.
 
-## Complete project guide
+## Complete project report
 
-Read the [project guide](docs/Airwave_Project_Guide.md) or download the [Word document](docs/Airwave_Project_Guide.docx) for setup instructions, architecture, networking explanations, channel editing, dashboard measurements, demonstration steps, troubleshooting and 40 viva questions with answers.
+Read the [project report](docs/Airwave_Project_Guide.md) or download the [Word document](docs/Airwave_Project_Guide.docx) for Windows setup, every button and field, a step-by-step channel creation example, architecture, networking explanations, dashboard measurements, demonstration steps, troubleshooting and 40 viva questions with answers.
 
 ## Run on Windows
 
