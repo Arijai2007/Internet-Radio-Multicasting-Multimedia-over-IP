@@ -2,6 +2,10 @@
 
 The application is written in Python (`radio/`), with a native desktop UI, TCP station discovery, and UDP multicast video/audio. It replaces the previous C implementation, which remains available in Git history.
 
+## Complete project guide
+
+Read the [project guide](docs/Airwave_Project_Guide.md) or download the [Word document](docs/Airwave_Project_Guide.docx) for setup instructions, architecture, networking explanations, channel editing, dashboard measurements, demonstration steps, troubleshooting and 40 viva questions with answers.
+
 ## Run on Windows
 
 Install Python 3.10+ and [64-bit VLC desktop](https://www.videolan.org/vlc/) matching Python architecture. Then double-click `run.bat`. First launch downloads dependencies, including FFmpeg.
