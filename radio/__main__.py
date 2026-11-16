@@ -10,7 +10,7 @@ def main():
     args = parser.parse_args()
     if not args.broadcast:
         from .app import main as gui
-        gui()
+        gui(args.interface)
         return
     stations = load_stations()
     server = DirectoryServer(("0.0.0.0", 5432), stations)

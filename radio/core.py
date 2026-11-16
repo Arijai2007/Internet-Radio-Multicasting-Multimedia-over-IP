@@ -23,6 +23,11 @@ class Station:
     source: str = "demo"
 
     def __post_init__(self):
+        if not all(isinstance(value, str) for value in
+                   (self.name, self.description, self.group, self.source)):
+            raise ValueError("Station name, description, group and source must be text")
+        if not self.source.strip():
+            raise ValueError("Station source cannot be empty")
         address = ipaddress.ip_address(self.group)
         if address.version != 4 or not address.is_multicast:
             raise ValueError("Station address must be an IPv4 multicast group")
@@ -32,13 +37,22 @@ class Station:
             raise ValueError("Station needs a positive ID and a name")
 
 
-def load_stations(path=ROOT / "stations.json"):
-    stations = [Station(**item) for item in json.loads(Path(path).read_text(encoding="utf-8"))]
+def parse_stations(items):
+    if not isinstance(items, list) or not all(isinstance(item, dict) for item in items):
+        raise ValueError("Stations must be a list of station objects")
+    try:
+        stations = [Station(**item) for item in items]
+    except TypeError as exc:
+        raise ValueError("Station configuration has missing or unknown fields") from exc
     if not stations or len({s.id for s in stations}) != len(stations):
         raise ValueError("Provide stations with unique IDs")
     if len({(s.group, s.port) for s in stations}) != len(stations):
         raise ValueError("Each station needs a unique group/port")
     return stations
+
+
+def load_stations(path=ROOT / "stations.json"):
+    return parse_stations(json.loads(Path(path).read_text(encoding="utf-8-sig")))
 
 
 def ffmpeg_path():
@@ -104,6 +118,11 @@ class Broadcaster:
             self.processes[station.id] = subprocess.Popen(
                 cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=log,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        except Exception:
+            membership = self.memberships.pop(station.id, None)
+            if membership:
+                membership.close()
+            raise
         finally:
             log.close()
 
@@ -155,6 +174,6 @@ def discover(host, port=5432):
     if len(data) > 65536 or not data.endswith(b"\n"):
         raise ValueError("Station directory response is incomplete or too large")
     payload = json.loads(data)
-    if payload.get("version") != 1:
+    if not isinstance(payload, dict) or payload.get("version") != 1:
         raise ValueError("Unsupported directory version")
-    return [Station(**item) for item in payload["stations"]]
+    return parse_stations(payload.get("stations"))

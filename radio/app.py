@@ -10,9 +10,10 @@ from .player import create_vlc
 
 
 class RadioApp:
-    def __init__(self, root):
+    def __init__(self, root, interface=""):
         self.root = root
         self.stations = load_stations()
+        self.local_stations = list(self.stations)
         self.broadcaster = Broadcaster()
         self.directory = None
         self.instance = self.player = None
@@ -38,7 +39,7 @@ class RadioApp:
         network = ttk.Frame(shell)
         network.pack(fill="x", pady=(0, 16))
         self.host = tk.StringVar(value="127.0.0.1")
-        self.interface = tk.StringVar()
+        self.interface = tk.StringVar(value=interface)
         ttk.Label(network, text="Directory host").pack(side="left")
         ttk.Entry(network, textvariable=self.host, width=18).pack(side="left", padx=8)
         self.refresh = ttk.Button(network, text="Refresh stations", command=self.refresh_stations)
@@ -128,6 +129,7 @@ class RadioApp:
             self.detail.set(f"{station.description}\n{station.group}:{station.port} • H.264 + AAC • Live playback")
             self.status.set("Joining multicast group…")
         except Exception as exc:
+            self.stop()
             messagebox.showerror("Playback", str(exc))
 
     def pause(self):
@@ -166,9 +168,9 @@ class RadioApp:
                 ipaddress.IPv4Address(interface)
             if self.directory:
                 return
-            self.directory = DirectoryServer(("0.0.0.0", 5432), self.stations)
+            self.directory = DirectoryServer(("0.0.0.0", 5432), self.local_stations)
             self.directory.start()
-            for station in self.stations:
+            for station in self.local_stations:
                 self.broadcaster.start(station, interface)
             self.status.set("Local stations broadcasting. Select a station and press Play.")
         except Exception as exc:
@@ -219,7 +221,13 @@ class RadioApp:
         finish()
 
 
-def main():
+def main(interface=""):
     root = tk.Tk()
-    RadioApp(root)
+    try:
+        RadioApp(root, interface)
+    except (OSError, ValueError) as exc:
+        root.withdraw()
+        messagebox.showerror("Station configuration", str(exc), parent=root)
+        root.destroy()
+        return
     root.mainloop()
